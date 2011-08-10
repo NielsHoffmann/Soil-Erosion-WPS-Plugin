@@ -21,12 +21,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import net.opengis.wps.x100.ProcessDescriptionType;
 
 import org.apache.log4j.Logger;
 import org.n52.wps.PropertyDocument.Property;
 import org.n52.wps.commons.WPSConfig;
 import org.n52.wps.server.IAlgorithm;
 import org.n52.wps.server.ITransactionalAlgorithmRepository;
+import org.n52.wps.server.request.ExecuteRequest;
 /**
  * A static repository to retrieve the available algorithms.
  * @author foerster
@@ -36,16 +38,24 @@ import org.n52.wps.server.ITransactionalAlgorithmRepository;
 public class TikoukaAlgorithmRepository implements ITransactionalAlgorithmRepository{
 
     private static Logger LOGGER = Logger.getLogger(TikoukaAlgorithmRepository.class);
-	private Map<String, IAlgorithm> algorithmMap;
+	private Map<String, String> algorithmMap;
+	private Map<String, ProcessDescriptionType> processDescriptionMap;
 
 	public TikoukaAlgorithmRepository() {
-		algorithmMap = new HashMap<String, IAlgorithm>();
+		algorithmMap = new HashMap<String, String>();
+		processDescriptionMap = new HashMap<String, ProcessDescriptionType>();
 
-		Property[] propertyArray = WPSConfig.getInstance().getPropertiesForRepositoryClass(this.getClass().getCanonicalName());
-		for(Property property : propertyArray){
-			if(property.getName().equalsIgnoreCase("Algorithm")){
-				addAlgorithm(property.getStringValue());
+                // check if the repository is active
+		if(WPSConfig.getInstance().isRepositoryActive(this.getClass().getCanonicalName())){
+			Property[] propertyArray = WPSConfig.getInstance().getPropertiesForRepositoryClass(this.getClass().getCanonicalName());
+			for(Property property : propertyArray){
+				// check the name and active state
+				if(property.getName().equalsIgnoreCase("Algorithm") && property.getActive()){
+					addAlgorithm(property.getStringValue());
+				}
 			}
+		} else {
+			LOGGER.debug("Tikouka Algorithm Repository is inactive.");
 		}
 
 	}
@@ -59,12 +69,26 @@ public class TikoukaAlgorithmRepository implements ITransactionalAlgorithmReposi
 
 	}
 
-	public IAlgorithm getAlgorithm(String className) {
-		return algorithmMap.get(className);
+	public IAlgorithm getAlgorithm(String className, ExecuteRequest executeRequest) {
+		try {
+			return loadAlgorithm(algorithmMap.get(className));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	public Collection<IAlgorithm> getAlgorithms() {
-		return algorithmMap.values();
+		Collection<IAlgorithm> resultList = new ArrayList<IAlgorithm>();
+		try {
+			for(String algorithmClasses : algorithmMap.values()){
+				resultList.add(loadAlgorithm(algorithmMap.get(algorithmClasses)));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+
+		}
+		return resultList;
 	}
 
 	public Collection<String> getAlgorithmNames() {
@@ -75,37 +99,26 @@ public class TikoukaAlgorithmRepository implements ITransactionalAlgorithmReposi
 		return algorithmMap.containsKey(className);
 	}
 
+	private IAlgorithm loadAlgorithm(String algorithmClassName) throws Exception{
+		IAlgorithm algorithm = (IAlgorithm)TikoukaAlgorithmRepository.class.getClassLoader().loadClass(algorithmClassName).newInstance();
+		if(!algorithm.processDescriptionIsValid()) {
+			LOGGER.warn("Algorithm description is not valid: " + algorithmClassName);
+			throw new Exception("Could not load algorithm " +algorithmClassName +". ProcessDescription Not Valid.");
+		}
+		return algorithm;
+	}
+
 	public boolean addAlgorithm(Object processID) {
 		if(!(processID instanceof String)){
 			return false;
 		}
 		String algorithmClassName = (String) processID;
-		try {
-			IAlgorithm algorithm = (IAlgorithm)TikoukaAlgorithmRepository.class.getClassLoader().loadClass(algorithmClassName).newInstance();
-			if(!algorithm.processDescriptionIsValid()) {
-				LOGGER.warn("Algorithm description is not valid: " + algorithmClassName);
-				return false;
-			}
-			algorithmMap.put(algorithmClassName, algorithm);
-			LOGGER.info("Algorithm class registered: " + algorithmClassName);
+
+		algorithmMap.put(algorithmClassName, algorithmClassName);
+		LOGGER.info("Algorithm class registered: " + algorithmClassName);
 
 
-			if(algorithm.getWellKnownName().length()!=0) {
-				algorithmMap.put(algorithm.getWellKnownName(), algorithm);
-			}
-		}
-		catch(ClassNotFoundException e) {
-			LOGGER.warn("Could not find algorithm class: " + algorithmClassName, e);
-			return false;
-		}
-		catch(IllegalAccessException e) {
-			LOGGER.warn("Access error occured while registering algorithm: " + algorithmClassName);
-			return false;
-		}
-		catch(InstantiationException e) {
-			LOGGER.warn("Could not instantiate algorithm: " + algorithmClassName);
-			return false;
-		}
+
 		return true;
 
 	}
@@ -120,5 +133,13 @@ public class TikoukaAlgorithmRepository implements ITransactionalAlgorithmReposi
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public ProcessDescriptionType getProcessDescription(String processID) {
+		if(!processDescriptionMap.containsKey(processID)){
+			processDescriptionMap.put(processID, getAlgorithm(processID, null).getDescription());
+		}
+		return processDescriptionMap.get(processID);
 	}
 }
