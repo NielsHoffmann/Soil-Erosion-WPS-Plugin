@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wps:ProcessDescriptions xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0
+http://geoserver.itc.nl:8080/wps/schemas/wps/1.0.0/wpsDescribeProcess_response.xsd" xml:lang="en-US" service="WPS" version="1.0.0">
+	<ProcessDescription wps:processVersion="2" storeSupported="true" statusSupported="false">
+		<ows:Identifier>tikouka.nl.wps.algorithm.SoilScalingAlgorithm</ows:Identifier>
+		<ows:Title>Soil Scaling</ows:Title>
+		<ows:Abstract>Demo Algorithm to show Soil Scaling Factor</ows:Abstract>
+		<ows:Metadata xlink:title="Soil" />
+		<ows:Metadata xlink:title="Scaling" />
+		<ows:Metadata xlink:title="WPS" />
+		<DataInputs>
+                        <Input minOccurs="1" maxOccurs="1">
+				<ows:Identifier>fsl</ows:Identifier>
+				<ows:Title>fsl</ows:Title>
+				<ows:Abstract>fsl</ows:Abstract>
+				<ComplexData>
+				<Default>
+					<Format>
+						<MimeType>text/XML</MimeType>
+						<Schema>http://schemas.opengis.net/gml/2.1.2/feature.xsd</Schema>
+					</Format>
+				</Default>
+				<Supported>
+					<Format>
+						<MimeType>text/XML</MimeType>
+						<Schema>http://schemas.opengis.net/gml/2.1.2/feature.xsd</Schema>
+					</Format>
+				</Supported>
+				</ComplexData>
+			</Input>
+                        <Input minOccurs="1" maxOccurs="1">
+				<ows:Identifier>scalefactor</ows:Identifier>
+				<ows:Title>scalefactor</ows:Title>
+				<ows:Abstract>scalefactor</ows:Abstract>
+				<ComplexData>
+					<Default>
+						<Format>
+							<MimeType>text/XML</MimeType>
+							<Schema>http://tikouka/schemas/RasterTable.xsd</Schema>
+						</Format>
+					</Default>
+					<Supported>
+						<Format>
+							<MimeType>text/XML</MimeType>
+							<Schema>http://tikouka/schemas/RasterTable.xsd</Schema>
+						</Format>
+					</Supported>
+				</ComplexData>
+			</Input>
+		</DataInputs>
+		<ProcessOutputs>
+			<Output>
+				<ows:Identifier>result</ows:Identifier>
+				<ows:Title>result</ows:Title>
+				<ows:Abstract>result</ows:Abstract>
+				<LiteralOutput>
+					<ows:DataType ows:reference="xs:string"/>
+				</LiteralOutput>
+			</Output>
+		</ProcessOutputs>
+	</ProcessDescription>
+</wps:ProcessDescriptions>
