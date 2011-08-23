@@ -63,7 +63,8 @@ public class GrowFactorFacade {
     // Start computing algorithms
     ReclassAlgorithm reclass = new ReclassAlgorithm();
     params.put( "landcover", Arrays.asList( (IData)new GTRasterDataBinding( landcover ) ) );
-    params.put( "valueToKeep", Arrays.asList( (IData)new LiteralIntBinding( 1 ) ) );
+    //params.put( "valueToKeep", Arrays.asList( (IData)new LiteralIntBinding( 1 ) ) );
+    params.put( "valueToKeep", Arrays.asList( (IData)new LiteralIntBinding( 3 ) ) );
     result = reclass.run( params );
     
     params.clear();
@@ -76,8 +77,10 @@ public class GrowFactorFacade {
     CombineAlgorithm combine = new CombineAlgorithm();
     params.put( "originalLandcover", Arrays.asList( (IData)new GTRasterDataBinding( landcover ) ) );
     params.put( "reclassedLandcover", Arrays.asList( result.get( "result" ) ) );
-    params.put( "nonReclassableValue", Arrays.asList( (IData)new LiteralStringBinding( "0,128,-9999" ) ) );
-    params.put( "reclassableValue", Arrays.asList( (IData)new LiteralStringBinding( "1" ) ) );
+    //params.put( "nonReclassableValue", Arrays.asList( (IData)new LiteralStringBinding( "0,128,-9999" ) ) );
+    params.put( "nonReclassableValue", Arrays.asList( (IData)new LiteralStringBinding( "1,7" ) ) );
+    //params.put( "reclassableValue", Arrays.asList( (IData)new LiteralStringBinding( "1" ) ) );
+    params.put( "reclassableValue", Arrays.asList( (IData)new LiteralStringBinding( "3" ) ) );
     result = combine.run( params );
     
     return ((GTRasterDataBinding)result.get( "result" )).getPayload();
